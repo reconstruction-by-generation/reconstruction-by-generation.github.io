@@ -1,0 +1,6 @@
+Variant,Obj_CD_mean,Obj_CD_median,Obj_ADDSS_mean,Obj_ADDSS_median,Part_CD_mean,Part_CD_median,Part_ADDSS_mean,Part_ADDSS_median
+Full model,0.042,0.023,0.062,0.037,0.033,0.020,0.043,0.028
+w/o stereo,0.048,0.030,0.078,0.050,0.030,0.018,0.039,0.027
+w/o norm,0.042,0.026,0.074,0.048,0.038,0.025,0.056,0.041
+objects only,0.040,0.023,0.060,0.037,0.073,0.037,0.086,0.048
+w/o pretraining,0.044,0.031,0.067,0.046,0.044,0.028,0.056,0.036

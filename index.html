@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RecGen: Reconstructive Generation from RGB-D</title>
+  <meta name="description" content="RecGen is a generative framework for probabilistic joint estimation of object shapes and 6-DoF poses from sparse RGB-D observations, enabling high-fidelity 3D multi-object scene reconstruction.">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="RecGen: 3D Multi-Object Scene Reconstruction from Sparse Observations">
+  <meta property="og:description" content="A generative framework for probabilistic 3D scene reconstruction from sparse RGB-D observations.">
+  <meta property="og:image" content="./figs/teaser.png">
+  <meta property="og:type" content="website">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="RecGen: 3D Multi-Object Scene Reconstruction from Sparse Observations">
+  <meta name="twitter:description" content="A generative framework for probabilistic 3D scene reconstruction from sparse RGB-D observations.">
+  <meta name="twitter:image" content="./figs/teaser.png">
+
+  <link rel="stylesheet" href="style.css">
+  <script>
+    // Apply saved theme before render to prevent flash
+    (function() {
+      const saved = localStorage.getItem('recgen-theme');
+      if (saved === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+
+<body>
+  <!-- Theme Toggle (commented out)
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+    </svg>
+  </button>
+  -->
+
+  <!-- Horizontal Navigation Bar -->
+  <nav class="horizontal-nav" id="horizontalNav" aria-label="Section navigation">
+    <a href="#" class="horizontal-nav-item active" data-section="hero">Intro</a>
+    <a href="#method" class="horizontal-nav-item" data-section="method">Method</a>
+    <a href="#dataset" class="horizontal-nav-item" data-section="dataset">Dataset</a>
+    <a href="#results" class="horizontal-nav-item" data-section="results">Results</a>
+    <a href="#additional" class="horizontal-nav-item" data-section="additional">Analysis</a>
+    <a href="#resources" class="horizontal-nav-item" data-section="resources">Resources</a>
+  </nav>
+
+  <!-- Progress Sidebar -->
+  <nav class="progress-sidebar" aria-label="Page progress">
+    <div class="progress-track">
+      <div class="progress-line"></div>
+      <div class="progress-line-fill"></div>
+      <div class="progress-item" data-section="hero">
+        <a href="#">
+          <span class="progress-dot"></span>
+          <span class="progress-label">Intro</span>
+        </a>
+      </div>
+      <div class="progress-item" data-section="method">
+        <a href="#method">
+          <span class="progress-dot"></span>
+          <span class="progress-label">Method</span>
+        </a>
+      </div>
+      <div class="progress-item" data-section="dataset">
+        <a href="#dataset">
+          <span class="progress-dot"></span>
+          <span class="progress-label">Dataset</span>
+        </a>
+      </div>
+      <div class="progress-item" data-section="results">
+        <a href="#results">
+          <span class="progress-dot"></span>
+          <span class="progress-label">Results</span>
+        </a>
+      </div>
+      <div class="progress-item" data-section="additional">
+        <a href="#additional">
+          <span class="progress-dot"></span>
+          <span class="progress-label">Analysis</span>
+        </a>
+      </div>
+      <div class="progress-item" data-section="resources">
+        <a href="#resources">
+          <span class="progress-dot"></span>
+          <span class="progress-label">Resources</span>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <!-- ==================== HERO ==================== -->
+    <div class="hero-flow">
+      <div class="hero-orb" aria-hidden="true"></div>
+      <div class="hero-text">RecGen</div>
+      <div class="sub-hero-text">3D Multi-Object Scene Reconstruction from Sparse Observations</div>
+
+      <div class="authors">
+        <a href="" target="_blank">Andrii Zadaianchuk</a><sup>1</sup>,
+        <a href="" target="_blank">Leonardo Barcellona</a><sup>1</sup>,
+        <a href="" target="_blank">Lennard Schuenemann</a><sup>1</sup>,
+        <a href="" target="_blank">Christian Gumbsch</a><sup>1</sup>,
+        <a href="" target="_blank">Zehao Wang</a><sup>2</sup>,<br>
+        <a href="" target="_blank">Muhammad Zubair Irshad</a><sup>4</sup>,
+        <a href="" target="_blank">Fabien Despinoy</a><sup>3</sup>,
+        <a href="" target="_blank">Rahaf Aljundi</a><sup>3</sup>,
+        <a href="" target="_blank">Stratis Gavves</a><sup>1</sup>,
+        <a href="" target="_blank">Sergey Zakharov</a><sup>4</sup><br>
+        <div class="affiliation-row">
+          <div class="affiliation-item">
+            <a href="https://www.uva.nl/en" target="_blank" rel="noopener" class="logo-wrapper">
+              <span class="logo-number">1</span>
+              <img class="logo-img" src="./assets/logos/uva.png" alt="University of Amsterdam" />
+            </a>
+          </div>
+          <div class="affiliation-item">
+            <a href="https://www.kuleuven.be/english/" target="_blank" rel="noopener" class="logo-wrapper">
+              <span class="logo-number">2</span>
+              <img class="logo-img" src="./assets/logos/kuleuven.png" alt="KU Leuven" />
+            </a>
+          </div>
+          <div class="affiliation-item">
+            <a href="https://www.toyota-europe.com" target="_blank" rel="noopener" class="logo-wrapper">
+              <span class="logo-number">3</span>
+              <img class="logo-img" src="./assets/logos/tme.png" alt="Toyota Motor Europe" />
+            </a>
+          </div>
+          <div class="affiliation-item">
+            <a href="https://www.tri.global" target="_blank" rel="noopener" class="logo-wrapper">
+              <span class="logo-number">4</span>
+              <img class="logo-img" src="./assets/logos/tri.png" alt="Toyota Research Institute" />
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- <p class="abstract-summary">
+        RecGen is a generative framework that reconstructs complete 3D multi-object scenes — including shape, texture, and pose — from one or more RGB-D images, even under heavy occlusion. By combining compositional synthetic data with strong 3D shape priors, it generalizes across diverse objects and real-world settings. RecGen outperforms the previous state of the art (SAM3D) by over 30% in shape quality and 34% in pose estimation, while using nearly 80% fewer training meshes.
+      </p> -->
+
+      <div class="hero-actions">
+        <a class="cta primary" href="#" target="_blank">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: -2px; margin-right: 6px;">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM6 20V4h5v7h7v9H6zm2-6h8v2H8v-2zm0-4h4v2H8v-2zm0 8h8v2H8v-2z" />
+          </svg>
+          Paper
+        </a>
+        <a class="cta primary" href="https://github.com/arhanjain/RecGen/tree/main" target="_blank">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: -3px; margin-right: 6px;">
+            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+          </svg>
+          Code
+        </a>
+        <a class="cta primary disabled" aria-disabled="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: -3px; margin-right: 6px;">
+            <path d="M12 2C6.48 2 2 4.02 2 6.5v11C2 19.98 6.48 22 12 22s10-2.02 10-4.5v-11C22 4.02 17.52 2 12 2zm0 2c4.42 0 8 1.35 8 3s-3.58 3-8 3-8-1.35-8-3 3.58-3 8-3zM4 9.26c1.8 1.06 4.73 1.74 8 1.74s6.2-.68 8-1.74v2.24c0 1.65-3.58 3-8 3s-8-1.35-8-3V9.26zm0 5c1.8 1.06 4.73 1.74 8 1.74s6.2-.68 8-1.74v3.24c0 1.65-3.58 3-8 3s-8-1.35-8-3v-3.24z"/>
+          </svg>
+          Dataset
+        </a>
+        <!-- <a class="cta primary" href="#bibtex">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: -3px; margin-right: 6px;">
+            <path d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z"/>
+          </svg>
+          Cite
+        </a> -->
+      </div>
+
+      <!-- Teaser Figure -->
+      <div class="teaser-wrapper">
+        <video class="teaser-image" autoplay loop muted playsinline>
+          <source src="./assets/videos/teaser_grid.mp4" type="video/mp4">
+        </video>
+      </div>
+      <p class="figure-caption" style="text-align: justify;">
+        RecGen is a generative framework that reconstructs complete 3D multi-object scenes — including shape, texture, and pose — from one or more RGB-D images, even under heavy occlusion. By combining compositional synthetic data with strong 3D shape priors, it generalizes across diverse objects and real-world settings. RecGen outperforms the previous state of the art by over 30% in shape quality and 34% in pose estimation, while using nearly 80% fewer training meshes.
+      </p>
+
+      <div class="hero-waves" aria-hidden="true">
+        <svg class="waves-svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+          viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
+          <defs>
+            <path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z"></path>
+          </defs>
+          <g class="wave-parallax">
+            <use xlink:href="#gentle-wave" x="48" y="0" fill="rgba(212,148,10,0.25)"></use>
+            <use xlink:href="#gentle-wave" x="48" y="3" fill="rgba(147,51,234,0.2)"></use>
+            <use xlink:href="#gentle-wave" x="48" y="5" fill="rgba(59,130,246,0.18)"></use>
+            <use xlink:href="#gentle-wave" x="48" y="7" fill="rgba(37,99,235,0.25)"></use>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+
+
+
+    <!-- ==================== 3D VIEWERS (commented out) ==================== -->
+
+
+    <div class="tagline-with-controls scroll-reveal" id="viewers">
+      <span class="tagline-text">Methodology: From Images to 3D Scenes</span>
+      <div class="slideshow-controls">
+        <button class="slideshow-btn" id="slidePrev" aria-label="Previous slide">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <button class="slideshow-btn" id="slidePlayPause" aria-label="Pause slideshow">
+          <svg class="icon-pause" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+          <svg class="icon-play" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="display:none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        </button>
+        <button class="slideshow-btn" id="slideNext" aria-label="Next slide">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+        <span class="slideshow-counter"><span id="slideNum">1</span> / 3</span>
+      </div>
+    </div>
+
+    <!-- ==================== METHOD ==================== -->
+    <div class="card-surface scroll-reveal" id="method" style="margin-top: 24px; padding: 0; overflow: hidden;">
+      <div class="method-slideshow">
+        <img src="./assets/images/method/method_1.jpg" alt="Method step 1" class="method-slide active">
+        <img src="./assets/images/method/method_2.jpg" alt="Method step 2" class="method-slide">
+        <img src="./assets/images/method/method_3.jpg" alt="Method step 3" class="method-slide">
+      </div>
+    </div>
+
+    <div class="card-surface reconstruction-split-section scroll-reveal">
+      <div class="section-heading">Interactive Reconstruction Viewer</div>
+      <p class="section-lead">From a single image, RecGen reconstructs a full 3D scene. Select a scene below to explore interactively.</p>
+
+      <div style="margin-bottom: 24px;">
+        <div id="sceneSelector" class="scene-selector" style="margin-bottom: 16px;">
+          <div class="scene-dataset-btns" id="datasetBtns"></div>
+          <div class="scene-number-btns" id="sceneBtns"></div>
+        </div>
+
+        <div class="reconstruction-split-container reconstruction-aligned">
+          <div class="reconstruction-half">
+            <div class="mesh-col-title">Input Image</div>
+            <div class="reconstruction-media-frame" id="inputImageFrame" style="position: relative;">
+              <img id="gsplatInputImg" src="./assets/meshes/HB_000003/input.jpg" alt="Input scene" />
+              <img id="gsplatOverlayImg" src="./assets/meshes/HB_000003/input_overlay.jpg" alt="Input segments" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 1.5s ease-in-out;" />
+              <div class="overlay-toggle-inset">
+                <label class="toggle-label">
+                  <input type="checkbox" id="maskOverlayToggle" checked>
+                  <span class="toggle-text">Show masks</span>
+                </label>
+              </div>
+            </div>
+            <div class="input-dataset-desc" id="inputDatasetDesc">6D pose estimation benchmark with household objects</div>
+          </div>
+          <div class="reconstruction-half">
+            <div class="mesh-col-title">Interactive 3D Viewer</div>
+            <div id="meshDesktopViewer" class="reconstruction-media-frame" style="position: relative;">
+              <div class="gsplat-loading" id="meshLoading">
+                <div class="gsplat-loading-text">Loading meshes...</div>
+                <div class="gsplat-progress-bar">
+                  <div class="gsplat-progress-fill" id="meshProgress"></div>
+                </div>
+              </div>
+              <canvas id="meshCanvas"></canvas>
+            </div>
+            <div class="mesh-note">Drag to rotate, scroll to zoom</div>
+          </div>
+        </div>
+
+        <div id="gsplatMobileViewer" class="reconstruction-mobile-fallback">
+          <img id="gsplatMobileImg" src="./assets/meshes/HB_000003/input_overlay.jpg" alt="Scene reconstruction" style="width: 100%;" />
+          <div class="mesh-note">Visit on desktop for the interactive 3D viewer.</div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ==================== DATASET ==================== -->
+    <div class="tagline scroll-reveal" id="dataset">Datasets</div>
+    <div class="card-surface scroll-reveal" style="margin-top: 24px;">
+
+      <!-- Training Datasets -->
+      <div class="section-heading">Training Data</div>
+      <p class="section-lead">RecGen is trained on 198K high-quality 3D assets from six public datasets, totaling 3.2M synthetic RGB-D images of compositional multi-object and part-based scenes.</p>
+      <div class="dataset-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 20px;">
+        <div class="dataset-item" style="background: var(--bg-elevated); padding: 20px; border-radius: 12px; border: 1px solid var(--border-subtle);">
+          <h4 style="font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600; margin: 0 0 8px 0; color: var(--text-primary);">Object Datasets</h4>
+          <p style="font-size: 12px; color: var(--text-secondary); margin: 0 0 12px 0; line-height: 1.5;">Compositional tabletop scenes with 3-10 distractor objects.</p>
+          <div class="dataset-video-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+            <div style="text-align: center;">
+              <div class="dataset-media" >
+                <video autoplay loop muted playsinline >
+                  <source src="assets/videos/datasets/objaverse.mp4" type="video/mp4">
+                </video>
+              </div>
+              <span style="font-size: 11px; margin-top: 4px; display: block; font-weight: 600;"><a href="https://arxiv.org/abs/2307.05663" target="_blank" rel="noopener" class="dataset-link" style="color: var(--text-secondary);">Objaverse-XL</a></span>
+            </div>
+            <div style="text-align: center;">
+              <div class="dataset-media" >
+                <video autoplay loop muted playsinline >
+                  <source src="assets/videos/datasets/abo.mp4" type="video/mp4">
+                </video>
+              </div>
+              <span style="font-size: 11px; margin-top: 4px; display: block; font-weight: 600;"><a href="https://arxiv.org/abs/2110.06199" target="_blank" rel="noopener" class="dataset-link" style="color: var(--text-secondary);">ABO</a></span>
+            </div>
+            <div style="text-align: center;">
+              <div class="dataset-media" >
+                <video autoplay loop muted playsinline >
+                  <source src="assets/videos/datasets/hssd.mp4" type="video/mp4">
+                </video>
+              </div>
+              <span style="font-size: 11px; margin-top: 4px; display: block; font-weight: 600;"><a href="https://arxiv.org/abs/2306.11290" target="_blank" rel="noopener" class="dataset-link" style="color: var(--text-secondary);">HSSD</a></span>
+            </div>
+          </div>
+        </div>
+        <div class="dataset-item" style="background: var(--bg-elevated); padding: 20px; border-radius: 12px; border: 1px solid var(--border-subtle);">
+          <h4 style="font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600; margin: 0 0 8px 0; color: var(--text-primary);">Part Datasets</h4>
+          <p style="font-size: 12px; color: var(--text-secondary); margin: 0 0 12px 0; line-height: 1.5;">Single-object scenes with fine-grained parts and self-occlusions.</p>
+          <div class="dataset-video-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+            <div style="text-align: center;">
+              <div class="dataset-media" >
+                <video autoplay loop muted playsinline >
+                  <source src="assets/videos/datasets/physx3dparts.mp4" type="video/mp4">
+                </video>
+              </div>
+              <span style="font-size: 11px; margin-top: 4px; display: block; font-weight: 600;"><a href="https://arxiv.org/abs/2507.12465" target="_blank" rel="noopener" class="dataset-link" style="color: var(--text-secondary);">PhysXNet</a></span>
+            </div>
+            <div style="text-align: center;">
+              <div class="dataset-media" >
+                <video autoplay loop muted playsinline >
+                  <source src="assets/videos/datasets/partnext.mp4" type="video/mp4">
+                </video>
+              </div>
+              <span style="font-size: 11px; margin-top: 4px; display: block; font-weight: 600;"><a href="https://arxiv.org/abs/2510.20155" target="_blank" rel="noopener" class="dataset-link" style="color: var(--text-secondary);">PartNeXt</a></span>
+            </div>
+            <div style="text-align: center;">
+              <div class="dataset-media" >
+                <video autoplay loop muted playsinline >
+                  <source src="assets/videos/datasets/partnetmobility.mp4" type="video/mp4">
+                </video>
+              </div>
+              <span style="font-size: 11px; margin-top: 4px; display: block; font-weight: 600;"><a href="https://arxiv.org/abs/2003.08515" target="_blank" rel="noopener" class="dataset-link" style="color: var(--text-secondary);">PartNet-Mobility</a></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr class="section-divider">
+
+      <!-- Evaluation Datasets -->
+      <div class="section-heading">Evaluation Datasets</div>
+      <p class="section-lead">RecGen is evaluated on four object-centric datasets and one part-centric dataset for shape and pose estimation.</p>
+      <div class="dataset-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-top: 20px;">
+        <div class="dataset-item" style="background: var(--bg-elevated); padding: 20px; border-radius: 12px; border: 1px solid var(--border-subtle);">
+          <h4 style="font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600; margin: 0 0 8px 0;"><a href="https://heidata.uni-heidelberg.de/dataset.xhtml?persistentId=doi:10.11588/data/V4MUMX" target="_blank" rel="noopener" class="dataset-link">LM-O</a></h4>
+          <p style="font-size: 12px; color: var(--text-secondary); margin: 0 0 12px 0; line-height: 1.5;">8 diverse objects in a single scene at various occlusion levels.</p>
+          <div class="dataset-media">
+            <img src="assets/images/lmo.jpg" alt="LM-O dataset example" style="width: 100%; display: block;">
+          </div>
+          <div class="dataset-tags">
+            <span class="dataset-tag object">Object</span>
+            <span class="dataset-tag sensor">Kinect</span>
+          </div>
+        </div>
+        <div class="dataset-item" style="background: var(--bg-elevated); padding: 20px; border-radius: 12px; border: 1px solid var(--border-subtle);">
+          <h4 style="font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600; margin: 0 0 8px 0;"><a href="https://arxiv.org/abs/1904.03167" target="_blank" rel="noopener" class="dataset-link">HB</a></h4>
+          <p style="font-size: 12px; color: var(--text-secondary); margin: 0 0 12px 0; line-height: 1.5;">33 diverse objects in 13 scenes of varying complexity.</p>
+          <div class="dataset-media">
+            <img src="assets/images/hb.jpg" alt="HB dataset example" style="width: 100%; display: block;">
+          </div>
+          <div class="dataset-tags">
+            <span class="dataset-tag object">Object</span>
+            <span class="dataset-tag sensor">Kinect 2</span>
+          </div>
+        </div>
+        <div class="dataset-item" style="background: var(--bg-elevated); padding: 20px; border-radius: 12px; border: 1px solid var(--border-subtle);">
+          <h4 style="font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600; margin: 0 0 8px 0;"><a href="https://arxiv.org/abs/2203.05701" target="_blank" rel="noopener" class="dataset-link">HOPE</a></h4>
+          <p style="font-size: 12px; color: var(--text-secondary); margin: 0 0 12px 0; line-height: 1.5;">28 toy grocery objects in 50 scenes with varying lighting and occlusion.</p>
+          <div class="dataset-media">
+            <img src="assets/images/hope.jpg" alt="HOPE dataset example" style="width: 100%; display: block;">
+          </div>
+          <div class="dataset-tags">
+            <span class="dataset-tag object">Object</span>
+            <span class="dataset-tag sensor">RealSense</span>
+          </div>
+        </div>
+        <div class="dataset-item" style="background: var(--bg-elevated); padding: 20px; border-radius: 12px; border: 1px solid var(--border-subtle);">
+          <h4 style="font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600; margin: 0 0 8px 0;"><a href="https://arxiv.org/abs/2504.10857" target="_blank" rel="noopener" class="dataset-link">ReOcS</a></h4>
+          <p style="font-size: 12px; color: var(--text-secondary); margin: 0 0 12px 0; line-height: 1.5;">18 grocery objects with splits based on occlusion extent.</p>
+          <div class="dataset-media">
+            <img src="assets/images/reocs.jpg" alt="ReOcS dataset example" style="width: 100%; display: block;">
+          </div>
+          <div class="dataset-tags">
+            <span class="dataset-tag object">Object</span>
+            <span class="dataset-tag sensor">Stereo</span>
+          </div>
+        </div>
+        <div class="dataset-item" style="background: var(--bg-elevated); padding: 20px; border-radius: 12px; border: 1px solid var(--border-subtle);">
+          <h4 style="font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600; margin: 0 0 8px 0;"><a href="https://arxiv.org/abs/2506.04941" target="_blank" rel="noopener" class="dataset-link">ArtVIP</a></h4>
+          <p style="font-size: 12px; color: var(--text-secondary); margin: 0 0 12px 0; line-height: 1.5;">Articulated objects with ground-truth part meshes.</p>
+          <div class="dataset-media">
+            <img src="assets/images/artvip.jpg" alt="ArtVIP dataset example" style="width: 100%; display: block;">
+          </div>
+          <div class="dataset-tags">
+            <span class="dataset-tag part">Part</span>
+            <span class="dataset-tag sensor">Synthetic</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ==================== RESULTS ==================== -->
+    <div class="tagline scroll-reveal" id="results">Results</div>
+
+    <!-- Compiled Showcase Video + Image Comparison Slider + Quantitative Results -->
+    <div class="card-surface scroll-reveal" id="section-quant" style="margin-top: 24px;">
+      <div class="section-heading">Qualitative Results</div>
+      <div class="showcase-video-wrapper">
+        <div class="showcase-video-labels">
+          <span class="showcase-label">Input</span>
+          <span class="showcase-label showcase-label--baseline"><a href="https://arxiv.org/abs/2410.23643" target="_blank" rel="noopener" class="dataset-link">SceneComplete</a></span>
+          <span class="showcase-label showcase-label--baseline"><a href="https://arxiv.org/abs/2503.18673" target="_blank" rel="noopener" class="dataset-link">Any6D</a></span>
+          <span class="showcase-label showcase-label--baseline"><a href="https://arxiv.org/abs/2511.16624" target="_blank" rel="noopener" class="dataset-link">SAM3D</a></span>
+          <span class="showcase-label showcase-label--ours">RecGen</span>
+          <span class="showcase-label">GT</span>
+        </div>
+        <video id="compiledVideo" src="./assets/videos/reconstructions/selected_compiled.mp4" autoplay muted loop playsinline class="showcase-video"></video>
+      </div>
+
+      <hr class="section-divider">
+
+      <div class="section-heading">Interactive Comparison</div>
+      <p class="section-lead">Drag the slider to compare any two methods. Select a dataset, scene, and the methods to compare.</p>
+
+      <!-- Scene selector (populated dynamically) -->
+      <div class="comparison-scene-selector" id="sliderSceneSelector"></div>
+
+      <!-- Method selectors -->
+      <div class="comparison-method-selectors">
+        <div class="method-select-group">
+          <select id="leftMethodSelect" class="method-select">
+            <option value="recgen" selected>RecGen</option>
+            <option value="scenecomplete">SceneComplete</option>
+            <option value="any6d_instantmesh">Any6D</option>
+            <option value="sam3d">SAM3D</option>
+          </select>
+        </div>
+        <span class="vs-label">vs</span>
+        <div class="method-select-group">
+          <select id="rightMethodSelect" class="method-select">
+            <option value="gt" selected>Ground Truth</option>
+            <option value="scenecomplete">SceneComplete</option>
+            <option value="any6d_instantmesh">Any6D</option>
+            <option value="sam3d">SAM3D</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="image-slider-wrapper" id="imageSlider">
+        <img class="slider-img-left" src="./figs/results/slider/HB/000003_recgen.png" alt="Left method" />
+        <div class="slider-img-right-clip">
+          <img class="slider-img-right" src="./figs/results/slider/HB/000003_gt.png" alt="Right method" />
+        </div>
+        <div class="slider-handle-bar">
+          <div class="slider-handle-circle">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M8 4l-6 8 6 8M16 4l6 8-6 8"/></svg>
+          </div>
+        </div>
+        <input type="range" class="image-slider-input" min="0" max="100" value="50" aria-label="Compare methods" />
+        <div class="slider-labels">
+          <span class="slider-label-left">RecGen</span>
+          <span class="slider-label-right">Ground Truth</span>
+        </div>
+      </div>
+
+      <hr class="section-divider">
+
+      <!-- Quantitative Comparison -->
+      <div class="section-heading">Quantitative Results</div>
+      <p class="section-lead">Comparison of pose estimation (ADD-SB) and shape reconstruction (CD<sub>norm</sub>) metrics across methods. RecGen outperforms baselines on both object-centric and part-centric datasets.</p>
+      <div class="tab-nav" data-tab-group="quant">
+        <button class="tab-btn active" data-tab="tab-pose">Pose Estimation</button>
+        <button class="tab-btn" data-tab="tab-shape">Shape Generation</button>
+      </div>
+
+      <div class="view-toggle">
+        <label class="toggle-label">
+          <input type="checkbox" id="quantViewToggle">
+          <span class="toggle-text">Show per-dataset breakdown</span>
+        </label>
+      </div>
+
+      <!-- Tab: Pose (ADD-SB, ADD-SB @0.05) — default active -->
+      <div class="tab-panel active" id="tab-pose">
+        <div class="view-avg">
+          <div class="chart-row">
+            <div class="chart-container chart-half chart-medium">
+              <div class="chart-title">ADD-SB (lower is better)</div>
+              <canvas id="chartAvgADDSB"></canvas>
+            </div>
+            <div class="chart-container chart-half chart-medium">
+              <div class="chart-title">ADD-SB @0.05 (higher is better)</div>
+              <canvas id="chartAvgADDSB05"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="view-detail">
+          <div class="chart-row">
+            <div class="chart-container chart-half chart-medium">
+              <div class="chart-title">ADD-SB per dataset (lower is better)</div>
+              <canvas id="chartDetailADDSB"></canvas>
+            </div>
+            <div class="chart-container chart-half chart-medium">
+              <div class="chart-title">ADD-SB @0.05 per dataset (higher is better)</div>
+              <canvas id="chartDetailADDSB05"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Shape (CD_norm) -->
+      <div class="tab-panel" id="tab-shape">
+        <div class="view-avg">
+          <div class="chart-row">
+            <div class="chart-container chart-full chart-medium">
+              <div class="chart-title">CD<sub>norm</sub> (lower is better)</div>
+              <canvas id="chartAvgCDNorm"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="view-detail">
+          <div class="chart-row">
+            <div class="chart-container chart-full chart-medium">
+              <div class="chart-title">CD<sub>norm</sub> per dataset (lower is better)</div>
+              <canvas id="chartDetailCDNorm"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== SECTION 2: ANALYSIS (ABLATION)  ==================== -->
+    <!-- <div class="tagline scroll-reveal" id="analysis">Analysis of RecGen performance</div>
+
+    <div class="card-surface scroll-reveal" id="section-ablation">
+      <div class="section-heading">Ablation Study</div>
+      <p class="section-lead">Ablation study for joint shape and pose generation. Relative change from full model (median). Object-centric = avg of HB, LM-O, ReOcS; Part-centric = ArtVIP.</p>
+
+      <div class="view-toggle">
+        <label class="toggle-label">
+          <input type="checkbox" id="ablationViewToggle">
+          <span class="toggle-text">Show per-dataset breakdown</span>
+        </label>
+      </div>
+
+      <div class="view-avg">
+        <div class="chart-row">
+          <div class="chart-container chart-half chart-medium">
+            <div class="chart-title">Relative Change: ADD-SB (median)</div>
+            <canvas id="chartAblationADDSBAvg"></canvas>
+          </div>
+          <div class="chart-container chart-half chart-medium">
+            <div class="chart-title">Relative Change: CD<sub>norm</sub> (median)</div>
+            <canvas id="chartAblationCDAvg"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="view-detail">
+        <div class="chart-row">
+          <div class="chart-container chart-half chart-medium">
+            <div class="chart-title">Relative Change: ADD-SB (median, per dataset)</div>
+            <canvas id="chartAblationADDSB"></canvas>
+          </div>
+          <div class="chart-container chart-half chart-medium">
+            <div class="chart-title">Relative Change: CD<sub>norm</sub> (median, per dataset)</div>
+            <canvas id="chartAblationCD"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <details class="ablation-details" style="margin-top: 20px;">
+        <summary style="cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;color:var(--text-secondary);">Show numerical table</summary>
+        <div class="table-wrapper" style="margin-top: 12px;">
+          <table class="ablation-table" id="ablationTable">
+            <thead>
+              <tr>
+                <th>Variant</th>
+                <th colspan="2" style="text-align:center;">Object-centric</th>
+                <th colspan="2" style="text-align:center;">Part-centric</th>
+              </tr>
+              <tr>
+                <th></th>
+                <th>CD<sub>norm</sub>&darr;</th>
+                <th>ADD-SB&darr;</th>
+                <th>CD<sub>norm</sub>&darr;</th>
+                <th>ADD-SB&darr;</th>
+              </tr>
+            </thead>
+            <tbody id="ablationTableBody">
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div> -->
+
+    <!-- ==================== SECTION 3: ANALYSIS OF RECGEN PERFORMANCE ==================== -->
+    <div class="tagline scroll-reveal" id="additional">Occlusions, Symmetry, and Multi-View</div>
+        <p class="section-note"
+      style="text-align: center; color: var(--text-muted); font-size: 13px; margin: -8px 0 16px 0;">A closer look at where RecGen's gains come from: occlusion robustness, symmetric object handling, and multi-view conditioning</p>
+
+    <div class="card-surface scroll-reveal" id="section-additional">
+      <!-- <p class="section-lead">A closer look at where RecGen's gains come from: how it holds up as occlusion increases, and how it performs across the individual objects of the HB dataset.</p> -->
+      <!-- <hr class="section-divider"> -->
+
+      <div class="section-heading">Occlusion Analysis</div>
+      <p class="section-lead">Performance by occlusion severity. Average across object-centric datasets (HB, LM-O, ReOcS).</p>
+      <div class="chart-row">
+        <div class="chart-container chart-half chart-medium">
+          <div class="chart-title">ADD-SB by Occlusion Level (lower is better)</div>
+          <canvas id="chartOcclusionADDSB"></canvas>
+        </div>
+        <div class="chart-container chart-half chart-medium">
+          <div class="chart-title">CD<sub>norm</sub> by Occlusion Level (lower is better)</div>
+          <canvas id="chartOcclusionCD"></canvas>
+        </div>
+      </div>
+
+      <!-- <hr class="section-divider"> -->
+
+      <!-- <div class="section-heading">Per-Object Analysis</div>
+      <p class="section-lead">Per-object comparison on HB dataset (33 objects). Object IDs in the charts below correspond to the numbered objects in the reference figure.</p>
+      <figure class="hb-objects-figure">
+        <img src="./assets/HB_objects.png" alt="The 33 objects of the HB (HomebrewedDB) dataset, numbered 1 through 33." loading="lazy" />
+        <figcaption>HB dataset objects (1–33) used as the x-axis labels in the per-object charts.</figcaption>
+      </figure>
+      <div class="chart-row">
+        <div class="chart-container chart-half chart-tall">
+          <div class="chart-title">Per-Object ADD-SB on HB (RecGen vs SAM3D)</div>
+          <canvas id="chartObjADDSB"></canvas>
+        </div>
+        <div class="chart-container chart-half chart-tall">
+          <div class="chart-title">Per-Object CD<sub>norm</sub> on HB (RecGen vs SAM3D)</div>
+          <canvas id="chartObjCDNorm"></canvas>
+        </div>
+      </div> -->
+
+      <hr class="section-divider">
+
+      <div class="section-heading" id="section-symmetry">Symmetry-Aware Reconstruction</div>
+      <p class="section-lead">
+        Symmetric objects (e.g. bowls, bottles, cups) are inherently ambiguous from a single viewpoint &mdash; many orientations produce identical images.
+        Rather than collapsing to a single (often wrong) pose, RecGen's probabilistic generation naturally handles these ambiguities, producing reconstructions that are faithful to the observation regardless of the underlying symmetry.
+      </p>
+
+      <!-- Interactive symmetry comparison viewer -->
+      <div class="symmetry-viewer" id="symmetryViewer">
+        <div class="overlay-toggle-wrap">
+          <label class="toggle-label">
+            <input type="checkbox" id="symmetryBorderToggle" checked>
+            <span class="toggle-text">Show verdict borders</span>
+          </label>
+        </div>
+        <div class="symmetry-grid-wrap">
+          <div class="symmetry-row-labels">
+            <div class="symmetry-row-label symmetry-label-input">Input</div>
+            <div class="symmetry-row-label symmetry-label-recgen">RecGen</div>
+            <div class="symmetry-row-label symmetry-label-sam3d"><a href="https://arxiv.org/abs/2511.16624" target="_blank" rel="noopener">SAM3D</a></div>
+          </div>
+          <div class="symmetry-stage" id="symmetryStage"></div>
+        </div>
+        <div class="symmetry-pager" id="symmetryPager"></div>
+      </div>
+      <p class="figure-caption" style="text-align: center; margin-top: 8px;">
+        Appearance generation for objects with symmetric shapes. RecGen produces pose-consistent textures, while SAM3D generates pose-agnostic appearances that often mismatch the observation.
+      </p>
+
+      <p class="section-lead" style="margin-top: 16px;">
+        To quantify this, we use a VLM-based orientation check: the percentage of symmetric-object reconstructions whose orientation matches the ground truth.
+      </p>
+      <div class="chart-row">
+        <div class="chart-container chart-full chart-medium">
+          <div class="chart-title">VLM Alignment Rate (%) &mdash; RecGen vs SAM3D</div>
+          <canvas id="chartVLMAlignment"></canvas>
+        </div>
+      </div>
+
+      <hr class="section-divider">
+
+      <div class="section-heading" id="section-multiview">Multi-View Reconstruction</div>
+      <p class="section-lead">
+        RecGen can leverage multiple RGB-D observations to produce more complete and accurate reconstructions. By fusing information across viewpoints, the model resolves ambiguities and fills in occluded regions.
+      </p>
+      <div class="multiview-video-wrapper">
+        <video autoplay loop muted playsinline class="multiview-video">
+          <source src="./assets/videos/reconstructions/obj_000005_multiview_000002_imgs_000442_000203.mp4" type="video/mp4">
+        </video>
+      </div>
+
+      <div class="tab-nav" data-tab-group="multiview" style="margin-top: 24px;">
+        <button class="tab-btn active" data-tab="tab-multiview-pose">Pose Estimation</button>
+        <button class="tab-btn" data-tab="tab-multiview-shape">Shape Generation</button>
+      </div>
+
+      <div class="tab-panel active" id="tab-multiview-pose">
+        <div class="chart-row">
+          <div class="chart-container chart-full chart-medium">
+            <div class="chart-title">ADD-SB (lower is better)</div>
+            <canvas id="chartMultiviewADDSB"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-multiview-shape">
+        <div class="chart-row">
+          <div class="chart-container chart-full chart-medium">
+            <div class="chart-title">CD<sub>norm</sub> (lower is better)</div>
+            <canvas id="chartMultiviewCD"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </div>
+   
+
+    <!-- ==================== RESOURCES ==================== -->
+    <div class="tagline scroll-reveal" id="resources">Resources</div>
+    <div class="card-surface resources-card scroll-reveal">
+      <div class="resources-grid">
+        <div class="resource-item">
+          <div class="resource-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+            </svg>
+          </div>
+          <h3>Paper</h3>
+          <p>Read the full technical details and evaluation in our paper.</p>
+          <a href="#" target="_blank" class="resource-link">
+            arXiv
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7V17" /></svg>
+          </a>
+        </div>
+        <div class="resource-item">
+          <div class="resource-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+            </svg>
+          </div>
+          <h3>Code</h3>
+          <p>Training code, evaluation scripts, and pre-trained models.</p>
+          <a href="TODO" target="_blank" class="resource-link">
+            GitHub
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7V17" /></svg>
+          </a>
+        </div>
+        <div class="resource-item disabled">
+          <div class="resource-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <ellipse cx="12" cy="5" rx="9" ry="3" />
+              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+            </svg>
+          </div>
+          <h3>Dataset</h3>
+          <p>Download training data and evaluation benchmarks.</p>
+          <span class="resource-link disabled">Coming Soon</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== BIBTEX ==================== -->
+    <div class="tagline scroll-reveal" id="bibtex">Reference</div>
+    <div class="bibtex-code scroll-reveal">
+      <button class="bibtex-copy-btn" id="bibtexCopyBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span>Copy</span>
+      </button>
+      <pre><code>@misc{zadaianchuk2025recgen,
+      title={RecGen: Reconstructive Generation of 3D Scenes from RGB-D Observations},
+      author={Andrii Zadaianchuk and Leonardo Barcellona and Lennard Schuenemann and Christian Gumbsch and Zehao Wang and Muhammad Zubair Irshad and Fabien Despinoy and Rahaf Aljundi and Stratis Gavves and Sergey Zakharov},
+      year={2025},
+      eprint={2512.16881},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2512.16881},
+}
+      </code></pre>
+    </div>
+  </div>
+
+  <div class="footer">
+    This website is based on the <a href="https://github.com/polaris-evals/polaris-evals.github.io" target="_blank" rel="noopener" class="dataset-link">PolaRiS template</a>.
+  </div>
+
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox">
+    <div class="lightbox-close">&times;</div>
+    <img class="lightbox-img" id="lightboxImg" alt="Full resolution" />
+  </div>
+
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <script src="quantitative_results/data.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>

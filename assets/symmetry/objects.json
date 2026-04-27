@@ -1,0 +1,130 @@
+[
+  {
+    "id": "hope_000003",
+    "dataset": "HOPE",
+    "obj_id": "000003",
+    "label": "Butter Box",
+    "samples": [
+      {
+        "index": 0,
+        "input": "hope_000003/sample_0_input.jpg",
+        "recgen": "hope_000003/sample_0_recgen.jpg",
+        "sam3d": "hope_000003/sample_0_sam3d.jpg"
+      },
+      {
+        "index": 1,
+        "input": "hope_000003/sample_1_input.jpg",
+        "recgen": "hope_000003/sample_1_recgen.jpg",
+        "sam3d": "hope_000003/sample_1_sam3d.jpg"
+      },
+      {
+        "index": 2,
+        "input": "hope_000003/sample_2_input.jpg",
+        "recgen": "hope_000003/sample_2_recgen.jpg",
+        "sam3d": "hope_000003/sample_2_sam3d.jpg"
+      },
+      {
+        "index": 3,
+        "input": "hope_000003/sample_3_input.jpg",
+        "recgen": "hope_000003/sample_3_recgen.jpg",
+        "sam3d": "hope_000003/sample_3_sam3d.jpg"
+      }
+    ]
+  },
+  {
+    "id": "hope_000012",
+    "dataset": "HOPE",
+    "obj_id": "000012",
+    "label": "Gelatin Box",
+    "samples": [
+      {
+        "index": 0,
+        "input": "hope_000012/sample_0_input.jpg",
+        "recgen": "hope_000012/sample_0_recgen.jpg",
+        "sam3d": "hope_000012/sample_0_sam3d.jpg"
+      },
+      {
+        "index": 1,
+        "input": "hope_000012/sample_1_input.jpg",
+        "recgen": "hope_000012/sample_1_recgen.jpg",
+        "sam3d": "hope_000012/sample_1_sam3d.jpg"
+      },
+      {
+        "index": 2,
+        "input": "hope_000012/sample_2_input.jpg",
+        "recgen": "hope_000012/sample_2_recgen.jpg",
+        "sam3d": "hope_000012/sample_2_sam3d.jpg"
+      },
+      {
+        "index": 3,
+        "input": "hope_000012/sample_3_input.jpg",
+        "recgen": "hope_000012/sample_3_recgen.jpg",
+        "sam3d": "hope_000012/sample_3_sam3d.jpg"
+      }
+    ]
+  },
+  {
+    "id": "hope_000025",
+    "dataset": "HOPE",
+    "obj_id": "000025",
+    "label": "Pudding Box",
+    "samples": [
+      {
+        "index": 0,
+        "input": "hope_000025/sample_0_input.jpg",
+        "recgen": "hope_000025/sample_0_recgen.jpg",
+        "sam3d": "hope_000025/sample_0_sam3d.jpg"
+      },
+      {
+        "index": 1,
+        "input": "hope_000025/sample_1_input.jpg",
+        "recgen": "hope_000025/sample_1_recgen.jpg",
+        "sam3d": "hope_000025/sample_1_sam3d.jpg"
+      },
+      {
+        "index": 2,
+        "input": "hope_000025/sample_2_input.jpg",
+        "recgen": "hope_000025/sample_2_recgen.jpg",
+        "sam3d": "hope_000025/sample_2_sam3d.jpg"
+      },
+      {
+        "index": 3,
+        "input": "hope_000025/sample_3_input.jpg",
+        "recgen": "hope_000025/sample_3_recgen.jpg",
+        "sam3d": "hope_000025/sample_3_sam3d.jpg"
+      }
+    ]
+  },
+  {
+    "id": "hb_000029",
+    "dataset": "HB",
+    "obj_id": "000029",
+    "label": "Bowl",
+    "samples": [
+      {
+        "index": 0,
+        "input": "hb_000029/sample_0_input.jpg",
+        "recgen": "hb_000029/sample_0_recgen.jpg",
+        "sam3d": "hb_000029/sample_0_sam3d.jpg"
+      },
+      {
+        "index": 1,
+        "input": "hb_000029/sample_1_input.jpg",
+        "recgen": "hb_000029/sample_1_recgen.jpg",
+        "sam3d": "hb_000029/sample_1_sam3d.jpg"
+      },
+      {
+        "index": 2,
+        "input": "hb_000029/sample_2_input.jpg",
+        "recgen": "hb_000029/sample_2_recgen.jpg",
+        "sam3d": "hb_000029/sample_2_sam3d.jpg"
+      },
+      {
+        "index": 3,
+        "input": "hb_000029/sample_3_input.jpg",
+        "recgen": "hb_000029/sample_3_recgen.jpg",
+        "sam3d": "hb_000029/sample_3_sam3d.jpg"
+      }
+    ]
+  }
+]

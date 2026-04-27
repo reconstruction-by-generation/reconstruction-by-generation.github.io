@@ -1,0 +1,4 @@
+# Scene viewer generated data and venv
+scene_viewer/data/
+scene_viewer/.venv/
+*DS_Store

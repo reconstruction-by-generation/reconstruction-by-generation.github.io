@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RecGen — 3D Scene Viewer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <style>
+    /* ── Reset & Theme ───────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --font-heading: 'Space Grotesk', sans-serif;
+      --font-body: 'Inter', sans-serif;
+    }
+
+    [data-theme="dark"] {
+      --bg-deep: #0a0a0f;
+      --bg-surface: #14141f;
+      --bg-elevated: #1e1e2e;
+      --bg-hover: #2a2a3e;
+      --text-primary: #f0f0f5;
+      --text-secondary: #a0a0b8;
+      --text-muted: #6a6a80;
+      --border: #2a2a3e;
+      --accent: #7c5cff;
+      --accent-glow: rgba(124, 92, 255, 0.3);
+      --highlight: #ff6b6b;
+      --highlight-glow: rgba(255, 107, 107, 0.25);
+      --shadow: rgba(0, 0, 0, 0.4);
+    }
+
+    [data-theme="light"] {
+      --bg-deep: #f5f5fa;
+      --bg-surface: #ffffff;
+      --bg-elevated: #f0f0f5;
+      --bg-hover: #e8e8f0;
+      --text-primary: #1a1a2e;
+      --text-secondary: #4a4a60;
+      --text-muted: #8a8a9f;
+      --border: #d0d0e0;
+      --accent: #6b4ce6;
+      --accent-glow: rgba(107, 76, 230, 0.2);
+      --highlight: #e05050;
+      --highlight-glow: rgba(224, 80, 80, 0.15);
+      --shadow: rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Header ──────────────────────────────────────────────── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .header h1 {
+      font-family: var(--font-heading);
+      font-size: 1.3rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .header h1 span {
+      color: var(--accent);
+    }
+
+    .scene-tabs {
+      display: flex;
+      gap: 6px;
+    }
+
+    .scene-tab {
+      padding: 8px 18px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-elevated);
+      color: var(--text-secondary);
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .scene-tab:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .scene-tab.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .theme-toggle {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-elevated);
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      transition: all 0.2s;
+    }
+
+    .theme-toggle:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    /* ── Main Layout ─────────────────────────────────────────── */
+    .main {
+      display: flex;
+      height: calc(100vh - 68px);
+      overflow: hidden;
+    }
+
+    /* ── Left Panel: Input Image ─────────────────────────────── */
+    .left-panel {
+      width: 280px;
+      min-width: 280px;
+      padding: 20px;
+      border-right: 1px solid var(--border);
+      background: var(--bg-surface);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .panel-label {
+      font-family: var(--font-heading);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+
+    .input-image-wrap {
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--bg-deep);
+    }
+
+    .input-image-wrap img {
+      width: 100%;
+      display: block;
+    }
+
+    .scene-info {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .scene-info strong {
+      color: var(--text-primary);
+    }
+
+    /* ── Center: 3D Viewer ───────────────────────────────────── */
+    .center-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      position: relative;
+    }
+
+    .viewer-container {
+      flex: 1;
+      position: relative;
+      background: var(--bg-deep);
+      overflow: hidden;
+    }
+
+    .viewer-container canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    .viewer-hint {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      background: var(--bg-surface);
+      padding: 4px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      pointer-events: none;
+      opacity: 0.8;
+      transition: opacity 0.5s;
+      z-index: 5;
+    }
+
+    /* ── Object Selector Bar ─────────────────────────────────── */
+    .object-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border);
+      overflow-x: auto;
+    }
+
+    .object-bar .panel-label {
+      margin-right: 4px;
+      white-space: nowrap;
+    }
+
+    .obj-btn {
+      padding: 6px 16px;
+      border: 2px solid var(--border);
+      border-radius: 20px;
+      background: var(--bg-elevated);
+      color: var(--text-secondary);
+      font-family: var(--font-body);
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .obj-btn:hover {
+      border-color: var(--accent);
+      color: var(--text-primary);
+      background: var(--bg-hover);
+    }
+
+    .obj-btn.active {
+      border-color: var(--highlight);
+      color: var(--highlight);
+      background: var(--highlight-glow);
+      font-weight: 600;
+    }
+
+    /* ── Right Panel: Object Detail ──────────────────────────── */
+    .right-panel {
+      width: 0;
+      overflow: hidden;
+      background: var(--bg-surface);
+      border-left: 1px solid var(--border);
+      transition: width 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .right-panel.open {
+      width: 320px;
+      min-width: 320px;
+    }
+
+    .right-panel-inner {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-width: 320px;
+    }
+
+    .right-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .close-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg-elevated);
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+
+    .close-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .detail-image-wrap {
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--bg-deep);
+    }
+
+    .detail-image-wrap img {
+      width: 100%;
+      display: block;
+    }
+
+    .detail-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    /* ── Loading Overlay ─────────────────────────────────────── */
+    .loading-overlay {
+      position: absolute;
+      inset: 0;
+      background: var(--bg-deep);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      transition: opacity 0.4s;
+    }
+
+    .loading-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 16px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+
+    .progress-bar {
+      width: 200px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    /* ── Object Detail Splat Viewer ──────────────────────────── */
+    .detail-viewer-container {
+      width: 100%;
+      height: 220px;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--bg-deep);
+      position: relative;
+    }
+
+    .detail-viewer-container canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    .detail-loading {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-deep);
+      z-index: 2;
+      transition: opacity 0.3s;
+    }
+
+    .detail-loading.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .detail-loading .loading-spinner {
+      width: 24px;
+      height: 24px;
+    }
+
+    /* ── Responsive ──────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .left-panel { width: 200px; min-width: 200px; }
+      .right-panel.open { width: 260px; min-width: 260px; }
+      .right-panel-inner { min-width: 260px; }
+    }
+
+    @media (max-width: 700px) {
+      .main { flex-direction: column; height: auto; }
+      .left-panel { width: 100%; min-width: 100%; border-right: none; border-bottom: 1px solid var(--border); flex-direction: row; padding: 12px; }
+      .input-image-wrap { max-width: 200px; }
+      .viewer-container { height: 50vh; }
+      .right-panel.open { width: 100%; min-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <h1><span>RecGen</span> — 3D Scene Viewer</h1>
+    <div class="scene-tabs" id="sceneTabs"></div>
+    <button class="theme-toggle" id="themeToggle" title="Toggle theme">&#9789;</button>
+  </div>
+
+  <!-- Main Layout -->
+  <div class="main">
+    <!-- Left: Input Image -->
+    <div class="left-panel">
+      <div class="panel-label">Input Image</div>
+      <div class="input-image-wrap">
+        <img id="inputImage" src="" alt="Input scene">
+      </div>
+      <div class="scene-info" id="sceneInfo"></div>
+    </div>
+
+    <!-- Center: 3D Viewer -->
+    <div class="center-panel">
+      <div class="viewer-container" id="viewerContainer">
+        <div class="loading-overlay" id="loadingOverlay">
+          <div class="loading-spinner"></div>
+          <div class="loading-text" id="loadingText">Loading scene...</div>
+          <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        </div>
+        <div class="viewer-hint" id="viewerHint">Drag to rotate &middot; Scroll to zoom</div>
+      </div>
+      <div class="object-bar" id="objectBar">
+        <span class="panel-label">Objects</span>
+      </div>
+    </div>
+
+    <!-- Right: Object Detail -->
+    <div class="right-panel" id="rightPanel">
+      <div class="right-panel-inner">
+        <div class="right-panel-header">
+          <div class="panel-label" id="detailTitle">Object Detail</div>
+          <button class="close-btn" id="closeDetail">&times;</button>
+        </div>
+
+        <!-- Object-only 3D viewer -->
+        <div class="detail-label">3D Reconstruction</div>
+        <div class="detail-viewer-container" id="detailViewerContainer">
+          <div class="detail-loading" id="detailLoading">
+            <div class="loading-spinner"></div>
+          </div>
+        </div>
+
+        <div class="detail-label">Object Render</div>
+        <div class="detail-image-wrap">
+          <img id="detailRender" src="" alt="Object render">
+        </div>
+
+        <div class="detail-label">Scene Overlay</div>
+        <div class="detail-image-wrap">
+          <img id="detailOverlay" src="" alt="Object overlay">
+        </div>
+
+        <div class="detail-label">Segmentation Mask</div>
+        <div class="detail-image-wrap">
+          <img id="detailMask" src="" alt="Object mask">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // ── State ─────────────────────────────────────────────────
+    let scenesConfig = null;
+    let currentScene = null;
+    let selectedObjIdx = null;
+    let GS3D = null;
+    let viewer = null;
+    let detailViewer = null;
+    let isLoading = false;
+
+    // Camera auto-rotation state
+    let autoRotateAngle = 0;
+    let isUserInteracting = false;
+    let interactionTimeout = null;
+
+    // ── DOM refs ─────────────────────────────────────────────
+    const sceneTabs = document.getElementById('sceneTabs');
+    const inputImage = document.getElementById('inputImage');
+    const sceneInfo = document.getElementById('sceneInfo');
+    const viewerContainer = document.getElementById('viewerContainer');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const loadingText = document.getElementById('loadingText');
+    const progressFill = document.getElementById('progressFill');
+    const objectBar = document.getElementById('objectBar');
+    const rightPanel = document.getElementById('rightPanel');
+    const detailTitle = document.getElementById('detailTitle');
+    const detailRender = document.getElementById('detailRender');
+    const detailOverlay = document.getElementById('detailOverlay');
+    const detailMask = document.getElementById('detailMask');
+    const detailViewerContainer = document.getElementById('detailViewerContainer');
+    const detailLoading = document.getElementById('detailLoading');
+    const viewerHint = document.getElementById('viewerHint');
+
+    // ── Theme toggle ─────────────────────────────────────────
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const next = isDark ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      document.getElementById('themeToggle').textContent = isDark ? '\u2600' : '\u263D';
+      localStorage.setItem('scene-viewer-theme', next);
+    });
+
+    // Restore theme
+    const saved = localStorage.getItem('scene-viewer-theme');
+    if (saved) {
+      document.documentElement.setAttribute('data-theme', saved);
+      document.getElementById('themeToggle').textContent = saved === 'dark' ? '\u263D' : '\u2600';
+    }
+
+    // ── Close detail panel ───────────────────────────────────
+    document.getElementById('closeDetail').addEventListener('click', () => {
+      deselectObject();
+    });
+
+    // ── Init ─────────────────────────────────────────────────
+    async function init() {
+      const resp = await fetch('./data/scenes_config.json');
+      scenesConfig = await resp.json();
+
+      // Build scene tabs
+      scenesConfig.scenes.forEach((scene, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'scene-tab' + (i === 0 ? ' active' : '');
+        btn.textContent = scene.label;
+        btn.addEventListener('click', () => {
+          if (isLoading || currentScene?.id === scene.id) return;
+          document.querySelectorAll('.scene-tab').forEach(t => t.classList.remove('active'));
+          btn.classList.add('active');
+          loadScene(scene);
+        });
+        sceneTabs.appendChild(btn);
+      });
+
+      // Load GS3D library
+      loadingText.textContent = 'Loading 3D renderer...';
+      GS3D = await import('https://cdn.jsdelivr.net/npm/@mkkellogg/gaussian-splats-3d@0.4.6/build/gaussian-splats-3d.module.min.js');
+
+      // Load first scene
+      await loadScene(scenesConfig.scenes[0]);
+    }
+
+    // ── Load Scene ───────────────────────────────────────────
+    async function loadScene(scene) {
+      if (isLoading) return;
+      isLoading = true;
+      currentScene = scene;
+      selectedObjIdx = null;
+
+      // Close detail panel
+      rightPanel.classList.remove('open');
+
+      // Show loading
+      loadingOverlay.classList.remove('hidden');
+      progressFill.style.width = '0%';
+      loadingText.textContent = 'Loading scene...';
+
+      // Update input image
+      inputImage.src = `./data/${scene.input_image}`;
+      sceneInfo.innerHTML = `
+        <strong>${scene.label}</strong><br>
+        ${scene.objects.length} objects<br>
+        ${scene.objects.reduce((s, o) => s + o.num_gaussians, 0).toLocaleString()} Gaussians
+      `;
+
+      // Dispose previous viewer
+      disposeViewer();
+      disposeDetailViewer();
+
+      // Build object buttons
+      buildObjectBar(scene);
+
+      // Create viewer
+      try {
+        const center = scene.scene_center || [0, 0, 1];
+        const radius = scene.scene_radius || 1;
+        const camDist = radius * 4;
+
+        viewer = new GS3D.Viewer({
+          cameraUp: [0, -1, 0],
+          initialCameraPosition: [center[0], center[1] - camDist * 0.3, center[2] - camDist],
+          initialCameraLookAt: center,
+          rootElement: viewerContainer,
+          sharedMemoryForWorkers: false,
+          dynamicScene: false,
+          selfDrivenMode: true,
+        });
+
+        // Load combined scene PLY (single file with all objects)
+        loadingText.textContent = 'Loading scene splats...';
+        await viewer.addSplatScene(`./data/${scene.scene_file}`, {
+          splatAlphaRemovalThreshold: 5,
+          showLoadingUI: false,
+          progressiveLoad: false,
+          position: [0, 0, 0],
+          rotation: [0, 0, 0, 1],
+          scale: [1, 1, 1],
+          onProgress: (pct) => {
+            progressFill.style.width = pct + '%';
+            loadingText.textContent = `Loading scene... ${Math.round(pct)}%`;
+          },
+        });
+
+        viewer.start();
+        setupAutoRotation(center, radius);
+
+        // Done loading
+        progressFill.style.width = '100%';
+        setTimeout(() => {
+          loadingOverlay.classList.add('hidden');
+          isLoading = false;
+        }, 300);
+
+        // Hide hint after a few seconds
+        setTimeout(() => {
+          viewerHint.style.opacity = '0';
+        }, 4000);
+
+      } catch (err) {
+        console.error('Failed to load scene:', err);
+        loadingText.textContent = 'Error: ' + err.message;
+        isLoading = false;
+      }
+    }
+
+    // ── Auto Rotation ────────────────────────────────────────
+    function setupAutoRotation(center, radius) {
+      if (!viewer) return;
+
+      // Track user interaction to pause auto-rotation
+      const container = viewerContainer;
+      const onInteractStart = () => {
+        isUserInteracting = true;
+        clearTimeout(interactionTimeout);
+      };
+      const onInteractEnd = () => {
+        clearTimeout(interactionTimeout);
+        interactionTimeout = setTimeout(() => { isUserInteracting = false; }, 2000);
+      };
+
+      container.addEventListener('pointerdown', onInteractStart);
+      container.addEventListener('pointerup', onInteractEnd);
+      container.addEventListener('wheel', () => {
+        onInteractStart();
+        onInteractEnd();
+      });
+
+      // Animate rotation
+      const speed = 0.003; // radians per frame
+      autoRotateAngle = 0;
+
+      function rotateStep() {
+        if (!viewer || !viewer.camera) {
+          return;
+        }
+
+        if (!isUserInteracting) {
+          autoRotateAngle += speed;
+          const cam = viewer.camera;
+          const cx = center[0], cy = center[1], cz = center[2];
+
+          // Get current distance from center
+          const dx = cam.position.x - cx;
+          const dy = cam.position.y - cy;
+          const dz = cam.position.z - cz;
+          const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+          // Calculate elevation angle (keep it)
+          const elevation = Math.asin(dy / dist);
+
+          // Rotate horizontally
+          const horizDist = dist * Math.cos(elevation);
+          cam.position.x = cx + horizDist * Math.sin(autoRotateAngle);
+          cam.position.z = cz - horizDist * Math.cos(autoRotateAngle);
+          cam.position.y = cy + dist * Math.sin(elevation);
+
+          cam.lookAt(cx, cy, cz);
+        } else {
+          // Track current angle from user-controlled camera position
+          const cam = viewer.camera;
+          const dx = cam.position.x - center[0];
+          const dz = cam.position.z - center[2];
+          autoRotateAngle = Math.atan2(dx, -dz);
+        }
+
+        requestAnimationFrame(rotateStep);
+      }
+
+      requestAnimationFrame(rotateStep);
+    }
+
+    // ── Object Bar ───────────────────────────────────────────
+    function buildObjectBar(scene) {
+      // Remove old buttons (keep the label)
+      const label = objectBar.querySelector('.panel-label');
+      objectBar.innerHTML = '';
+      objectBar.appendChild(label);
+
+      scene.objects.forEach((obj, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'obj-btn';
+        btn.textContent = obj.label || `Object ${obj.index}`;
+        btn.addEventListener('click', () => {
+          if (selectedObjIdx === i) {
+            deselectObject();
+          } else {
+            selectObject(i);
+          }
+        });
+        objectBar.appendChild(btn);
+      });
+    }
+
+    // ── Select / Deselect Object ─────────────────────────────
+    function selectObject(idx) {
+      selectedObjIdx = idx;
+      const obj = currentScene.objects[idx];
+
+      // Update button states
+      objectBar.querySelectorAll('.obj-btn').forEach((btn, i) => {
+        btn.classList.toggle('active', i === idx);
+      });
+
+      // Update detail panel
+      detailTitle.textContent = obj.label || `Object ${obj.index}`;
+      detailRender.src = `./data/${obj.render}`;
+      detailOverlay.src = `./data/${obj.overlay}`;
+      detailMask.src = `./data/${obj.mask}`;
+      rightPanel.classList.add('open');
+
+      // Load object-only splat viewer
+      loadDetailViewer(obj);
+    }
+
+    function deselectObject() {
+      selectedObjIdx = null;
+      rightPanel.classList.remove('open');
+      objectBar.querySelectorAll('.obj-btn').forEach(btn => btn.classList.remove('active'));
+      disposeDetailViewer();
+    }
+
+    // ── Detail Viewer (single object) ────────────────────────
+    async function loadDetailViewer(obj) {
+      disposeDetailViewer();
+      detailLoading.classList.remove('hidden');
+
+      try {
+        const center = obj.centroid;
+        const bboxSize = [
+          obj.bbox_max[0] - obj.bbox_min[0],
+          obj.bbox_max[1] - obj.bbox_min[1],
+          obj.bbox_max[2] - obj.bbox_min[2],
+        ];
+        const maxDim = Math.max(...bboxSize);
+        const camDist = maxDim * 3;
+
+        detailViewer = new GS3D.Viewer({
+          cameraUp: [0, -1, 0],
+          initialCameraPosition: [center[0], center[1] - camDist * 0.3, center[2] - camDist],
+          initialCameraLookAt: center,
+          rootElement: detailViewerContainer,
+          sharedMemoryForWorkers: false,
+          dynamicScene: false,
+          selfDrivenMode: true,
+        });
+
+        await detailViewer.addSplatScene(`./data/${obj.file}`, {
+          splatAlphaRemovalThreshold: 5,
+          showLoadingUI: false,
+          progressiveLoad: false,
+          position: [0, 0, 0],
+          rotation: [0, 0, 0, 1],
+          scale: [1, 1, 1],
+        });
+
+        detailViewer.start();
+        detailLoading.classList.add('hidden');
+
+        // Auto-rotate detail viewer
+        setupDetailAutoRotation(center, camDist);
+
+      } catch (err) {
+        console.error('Detail viewer error:', err);
+        detailLoading.classList.add('hidden');
+      }
+    }
+
+    function setupDetailAutoRotation(center, camDist) {
+      let angle = 0;
+      let detailInteracting = false;
+      let detailTimeout = null;
+
+      detailViewerContainer.addEventListener('pointerdown', () => {
+        detailInteracting = true;
+        clearTimeout(detailTimeout);
+      });
+      detailViewerContainer.addEventListener('pointerup', () => {
+        clearTimeout(detailTimeout);
+        detailTimeout = setTimeout(() => { detailInteracting = false; }, 2000);
+      });
+
+      function step() {
+        if (!detailViewer || !detailViewer.camera) return;
+        if (!detailInteracting) {
+          angle += 0.005;
+          const cam = detailViewer.camera;
+          cam.position.x = center[0] + camDist * Math.sin(angle);
+          cam.position.z = center[2] - camDist * Math.cos(angle);
+          cam.position.y = center[1] - camDist * 0.3;
+          cam.lookAt(center[0], center[1], center[2]);
+        }
+        requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    // ── Dispose Viewers ──────────────────────────────────────
+    function disposeViewer() {
+      if (viewer) {
+        try { viewer.dispose(); } catch (e) { console.warn('Viewer dispose:', e); }
+        viewer = null;
+      }
+      viewerContainer.querySelectorAll('canvas').forEach(c => c.remove());
+    }
+
+    function disposeDetailViewer() {
+      if (detailViewer) {
+        try { detailViewer.dispose(); } catch (e) { console.warn('Detail dispose:', e); }
+        detailViewer = null;
+      }
+      detailViewerContainer.querySelectorAll('canvas').forEach(c => c.remove());
+    }
+
+    // ── Boot ─────────────────────────────────────────────────
+    init().catch(err => {
+      console.error('Init failed:', err);
+      loadingText.textContent = 'Failed to initialize: ' + err.message;
+    });
+  </script>
+
+</body>
+</html>

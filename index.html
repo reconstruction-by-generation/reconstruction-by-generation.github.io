@@ -113,16 +113,16 @@
       <div class="sub-hero-text">3D Multi-Object Scene Reconstruction from Sparse Observations</div>
 
       <div class="authors">
-        <a href="" target="_blank">Andrii Zadaianchuk</a><sup>1</sup>,
-        <a href="" target="_blank">Leonardo Barcellona</a><sup>1</sup>,
-        <a href="" target="_blank">Lennard Schuenemann</a><sup>1</sup>,
-        <a href="" target="_blank">Christian Gumbsch</a><sup>1</sup>,
-        <a href="" target="_blank">Zehao Wang</a><sup>2</sup>,<br>
-        <a href="" target="_blank">Muhammad Zubair Irshad</a><sup>4</sup>,
-        <a href="" target="_blank">Fabien Despinoy</a><sup>3</sup>,
-        <a href="" target="_blank">Rahaf Aljundi</a><sup>3</sup>,
-        <a href="" target="_blank">Stratis Gavves</a><sup>1</sup>,
-        <a href="" target="_blank">Sergey Zakharov</a><sup>4</sup><br>
+        <a href="https://zadaianchuk.github.io/" target="_blank">Andrii Zadaianchuk</a><sup>1</sup>,
+        <a href="https://leobarcellona.github.io/" target="_blank">Leonardo Barcellona</a><sup>1</sup>,
+        <a href="https://github.com/lschunemann" target="_blank">Lennard Schuenemann</a><sup>1</sup>,
+        <a href="https://cgumbsch.github.io/" target="_blank">Christian Gumbsch</a><sup>1</sup>,
+        <a href="https://homes.esat.kuleuven.be/~zwang/" target="_blank">Zehao Wang</a><sup>2</sup>,<br>
+        <a href="https://zubairirshad.com/" target="_blank">Muhammad Zubair Irshad</a><sup>4</sup>,
+        <a href="https://be.linkedin.com/in/fabiendespinoy" target="_blank">Fabien Despinoy</a><sup>3</sup>,
+        <a href="https://be.linkedin.com/in/rahaf-aljundi" target="_blank">Rahaf Aljundi</a><sup>3</sup>,
+        <a href="https://www.egavves.com/" target="_blank">Stratis Gavves</a><sup>1</sup>,
+        <a href="https://zakharos.github.io/" target="_blank">Sergey Zakharov</a><sup>4</sup><br>
         <div class="affiliation-row">
           <div class="affiliation-item">
             <a href="https://www.uva.nl/en" target="_blank" rel="noopener" class="logo-wrapper">
@@ -174,12 +174,12 @@
           </svg>
           Dataset
         </a>
-        <!-- <a class="cta primary" href="#bibtex">
+        <a class="cta primary" href="#bibtex">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: -3px; margin-right: 6px;">
             <path d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z"/>
           </svg>
           Cite
-        </a> -->
+        </a>
       </div>
 
       <!-- Teaser Figure -->
@@ -702,11 +702,14 @@
 
       <div class="section-heading" id="section-multiview">Multi-View Reconstruction</div>
       <p class="section-lead">
-        RecGen can leverage multiple RGB-D observations to produce more complete and accurate reconstructions. By fusing information across viewpoints, the model resolves ambiguities and fills in occluded regions.
+        RecGen can leverage multiple RGB-D observations to produce more complete and accurate reconstructions. By fusing information across viewpoints, the model resolves ambiguities and fills in occluded regions. Out of the two pose predictions, the best one is selected based on its alignment with the corresponding view’s point map in metric camera space.
       </p>
       <div class="multiview-video-wrapper">
         <video autoplay loop muted playsinline class="multiview-video">
-          <source src="./assets/videos/reconstructions/obj_000005_multiview_000002_imgs_000442_000203.mp4" type="video/mp4">
+          <source src="./assets/videos/reconstructions/multiview_0.mp4" type="video/mp4">
+        </video>
+        <video autoplay loop muted playsinline class="multiview-video">
+          <source src="./assets/videos/reconstructions/multiview_1.mp4" type="video/mp4">
         </video>
       </div>
 
@@ -794,11 +797,11 @@
       <pre><code>@misc{zadaianchuk2025recgen,
       title={RecGen: Reconstructive Generation of 3D Scenes from RGB-D Observations},
       author={Andrii Zadaianchuk and Leonardo Barcellona and Lennard Schuenemann and Christian Gumbsch and Zehao Wang and Muhammad Zubair Irshad and Fabien Despinoy and Rahaf Aljundi and Stratis Gavves and Sergey Zakharov},
-      year={2025},
-      eprint={2512.16881},
+      year={2026},
+      <!-- eprint={2512.16881},
       archivePrefix={arXiv},
       primaryClass={cs.CV},
-      url={https://arxiv.org/abs/2512.16881},
+      url={https://arxiv.org/abs/2512.16881}, -->
 }
       </code></pre>
     </div>

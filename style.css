@@ -4096,6 +4096,9 @@ html {
 /* Multi-view video */
 .multiview-video-wrapper {
   margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .multiview-video {

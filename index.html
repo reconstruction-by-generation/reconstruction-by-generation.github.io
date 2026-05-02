@@ -282,8 +282,9 @@
         </div>
 
         <div id="gsplatMobileViewer" class="reconstruction-mobile-fallback">
-          <img id="gsplatMobileImg" src="./assets/meshes/HB_000003/input_overlay.jpg" alt="Scene reconstruction" style="width: 100%;" />
-          <div class="mesh-note">Visit on desktop for the interactive 3D viewer.</div>
+          <div class="mobile-viewer-label">Input with Segmentation Masks</div>
+          <img id="gsplatMobileImg" src="./assets/meshes/HB_000003/input_overlay.jpg" alt="Scene reconstruction" style="width: 100%; border-radius: 12px; border: 1px solid var(--border-subtle);" />
+          <div class="mesh-note">Interactive 3D viewer available on desktop.</div>
         </div>
       </div>
     </div>
@@ -364,7 +365,7 @@
       <!-- Evaluation Datasets -->
       <div class="section-heading">Evaluation Datasets</div>
       <p class="section-lead">RecGen is evaluated on four object-centric datasets and one part-centric dataset for shape and pose estimation.</p>
-      <div class="dataset-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-top: 20px;">
+      <div class="dataset-grid eval-dataset-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-top: 20px;">
         <div class="dataset-item" style="background: var(--bg-elevated); padding: 20px; border-radius: 12px; border: 1px solid var(--border-subtle);">
           <h4 style="font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600; margin: 0 0 8px 0;"><a href="https://heidata.uni-heidelberg.de/dataset.xhtml?persistentId=doi:10.11588/data/V4MUMX" target="_blank" rel="noopener" class="dataset-link">LM-O</a></h4>
           <p style="font-size: 12px; color: var(--text-secondary); margin: 0 0 12px 0; line-height: 1.5;">8 diverse objects in a single scene at various occlusion levels.</p>
@@ -494,8 +495,8 @@
       <div class="section-heading">Quantitative Results</div>
       <p class="section-lead">Comparison of pose estimation (ADD-SB) and shape reconstruction (CD<sub>norm</sub>) metrics across methods. RecGen outperforms baselines on both object-centric and part-centric datasets.</p>
       <div class="tab-nav" data-tab-group="quant">
-        <button class="tab-btn active" data-tab="tab-pose">Pose Estimation</button>
-        <button class="tab-btn" data-tab="tab-shape">Shape Generation</button>
+        <button class="tab-btn active" data-tab="tab-pose"><span class="tab-full">Pose Estimation</span><span class="tab-short">Pose</span></button>
+        <button class="tab-btn" data-tab="tab-shape"><span class="tab-full">Shape Generation</span><span class="tab-short">Shape</span></button>
       </div>
 
       <div class="view-toggle">
@@ -715,8 +716,8 @@
       </div>
 
       <div class="tab-nav" data-tab-group="multiview" style="margin-top: 24px;">
-        <button class="tab-btn active" data-tab="tab-multiview-pose">Pose Estimation</button>
-        <button class="tab-btn" data-tab="tab-multiview-shape">Shape Generation</button>
+        <button class="tab-btn active" data-tab="tab-multiview-pose"><span class="tab-full">Pose Estimation</span><span class="tab-short">Pose</span></button>
+        <button class="tab-btn" data-tab="tab-multiview-shape"><span class="tab-full">Shape Generation</span><span class="tab-short">Shape</span></button>
       </div>
 
       <div class="tab-panel active" id="tab-multiview-pose">

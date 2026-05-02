@@ -985,8 +985,13 @@ document.addEventListener('DOMContentLoaded', () => {
   ];
   const BASE = './assets/symmetry/';
   const METHODS = ['input', 'recgen', 'sam3d'];
-  const COLS = 8;
+  const COLS_DESKTOP = 8;
+  const COLS_MOBILE = 4;
   const LABEL_DELAY = 2000;
+
+  function getCols() {
+    return window.innerWidth <= 768 ? COLS_MOBILE : COLS_DESKTOP;
+  }
 
   const LABELS = {
     recgen: {
@@ -1012,15 +1017,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Split into pages of COLS
-  const pages = [];
-  for (let i = 0; i < allSamples.length; i += COLS) {
-    pages.push(allSamples.slice(i, i + COLS));
+  // Split into pages based on current column count
+  function buildPages() {
+    const cols = getCols();
+    const pages = [];
+    for (let i = 0; i < allSamples.length; i += cols) {
+      pages.push(allSamples.slice(i, i + cols));
+    }
+    return pages;
   }
 
+  let pages = buildPages();
   let currentPage = 0;
   let labelTimer = null;
-  let borderToggleOn = true; // user toggle state
+  let borderToggleOn = true;
 
   const borderToggle = document.getElementById('symmetryBorderToggle');
   if (borderToggle) {
@@ -1029,7 +1039,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const grid = stage.querySelector('.symmetry-grid');
       if (!grid) return;
       if (borderToggleOn) {
-        // Show immediately
         clearTimeout(labelTimer);
         grid.classList.add('show-verdicts');
       } else {
@@ -1070,13 +1079,11 @@ document.addEventListener('DOMContentLoaded', () => {
     clearTimeout(labelTimer);
     stage.innerHTML = '';
     stage.appendChild(buildPage(idx));
-    // Update pager dots
     if (pager) {
       pager.querySelectorAll('.symmetry-dot').forEach((d, i) => {
         d.classList.toggle('active', i === idx);
       });
     }
-    // Slowly reveal verdict labels (respects user toggle)
     if (borderToggleOn) {
       labelTimer = setTimeout(() => {
         const grid = stage.querySelector('.symmetry-grid');
@@ -1085,18 +1092,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Build pager dots
-  if (pager && pages.length > 1) {
-    pages.forEach((_, i) => {
-      const dot = document.createElement('button');
-      dot.className = 'symmetry-dot' + (i === 0 ? ' active' : '');
-      dot.setAttribute('aria-label', `Page ${i + 1}`);
-      dot.addEventListener('click', () => showPage(i));
-      pager.appendChild(dot);
-    });
+  function rebuildPager() {
+    if (!pager) return;
+    pager.innerHTML = '';
+    if (pages.length > 1) {
+      pages.forEach((_, i) => {
+        const dot = document.createElement('button');
+        dot.className = 'symmetry-dot' + (i === currentPage ? ' active' : '');
+        dot.setAttribute('aria-label', `Page ${i + 1}`);
+        dot.addEventListener('click', () => showPage(i));
+        pager.appendChild(dot);
+      });
+    }
   }
 
-  showPage(0);
+  function rebuild() {
+    pages = buildPages();
+    if (currentPage >= pages.length) currentPage = pages.length - 1;
+    rebuildPager();
+    showPage(currentPage);
+  }
+
+  // Rebuild on resize
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(rebuild, 200);
+  });
+
+  rebuild();
 });
 
 // ===== Video Hover to Play =====

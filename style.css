@@ -2438,6 +2438,15 @@ a#figure-3-img img {
   text-align: center;
 }
 
+.mobile-viewer-label {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+  text-align: center;
+}
+
 .reconstruction-mobile-fallback video {
   width: 100%;
   border-radius: 12px;
@@ -3198,6 +3207,14 @@ video.r2s-video-item {
   background: var(--neon-violet);
 }
 
+/* Tab label visibility - defaults (desktop) */
+.tab-full {
+  display: inline;
+}
+.tab-short {
+  display: none;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   body {
@@ -3238,6 +3255,94 @@ video.r2s-video-item {
   
   .section-heading {
     font-size: 24px;
+  }
+
+  /* Hero action buttons - wrap on mobile */
+  .hero-actions {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .hero-actions .cta {
+    padding: 12px 18px;
+    font-size: 13px;
+  }
+
+  /* Evaluation datasets - 2 columns on tablet */
+  .eval-dataset-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Qualitative results labels - smaller font, allow wrapping */
+  .showcase-video-labels {
+    gap: 2px;
+  }
+  .showcase-label {
+    font-size: 9px;
+    padding: 4px 2px;
+    min-width: 0;
+  }
+
+  /* Symmetry viewer - smaller labels and grid on mobile */
+  .symmetry-row-labels {
+    padding-right: 6px;
+  }
+  .symmetry-row-label {
+    font-size: 10px;
+    padding: 4px 4px;
+    min-width: 22px;
+  }
+  .symmetry-grid {
+    gap: 3px !important;
+  }
+  .symmetry-cell {
+    border-radius: 4px;
+  }
+  .symmetry-cell img {
+    border-radius: 4px;
+  }
+
+  /* Tab buttons - shorter text on mobile */
+  .tab-btn {
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+  .tab-full {
+    display: none;
+  }
+  .tab-short {
+    display: inline;
+  }
+
+  /* Interactive 3D viewer - hide entire section on mobile */
+  .reconstruction-split-section {
+    display: none !important;
+  }
+}
+
+/* Extra small screens (phones) */
+@media (max-width: 480px) {
+  .hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .hero-actions .cta {
+    text-align: center;
+    width: 100%;
+  }
+
+  /* Evaluation datasets - single column on small phones */
+  .eval-dataset-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Qualitative results labels - 2 rows */
+  .showcase-video-labels {
+    flex-wrap: wrap;
+  }
+  .showcase-label {
+    flex: 1 1 30%;
+    font-size: 10px;
+    padding: 5px 3px;
   }
 }
 
